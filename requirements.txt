@@ -1,0 +1,7 @@
+fastapi
+langchain
+ctransformers
+sentence-transformers
+pinecone-client
+langchain
+pypdf
