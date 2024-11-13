@@ -1,8 +1,11 @@
-fastapi
+faiss-cpu
+groq
+langchain-groq
+PyPDF2
+langchain_google_genai
 langchain
-ctransformers
-sentence-transformers
-pinecone-client
-langchain
-langchain-community
+streamlit
+langchain_community
+python-dotenv
 pypdf
+google-cloud-aiplatform>=1.38
