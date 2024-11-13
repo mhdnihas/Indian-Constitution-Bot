@@ -1,14 +1,27 @@
 from fastapi import FastAPI, HTTPException
-from langchain_community.document_loaders import PyPDFDirectoryLoader
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+import os
 
 app = FastAPI()
 
-@app.post("/load_data")
-def load_data():
-    try:
-        directory_path = "Indian_Constitution.pdf"
-        loader = PyPDFDirectoryLoader(directory_path)
-        docs = loader.load()
-        return {"message": f"Loaded {len(docs)} documents successfully."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# Serve static files (e.g., index.html, CSS, JS)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Define the request and response models
+class ChatRequest(BaseModel):
+    message: str
+
+class ChatResponse(BaseModel):
+    reply: str
+
+@app.get("/")
+async def get_index():
+    return FileResponse("static/index.html")
+
+@app.post("/chatbot", response_model=ChatResponse)
+async def chatbot(request: ChatRequest):
+    user_message = request.message
+    bot_reply = f"You said: {user_message}"
+    return JSONResponse(content={"reply": bot_reply})
