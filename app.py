@@ -62,7 +62,8 @@ def setup_models():
     genai.configure(api_key=GEMINI_API_KEY)
 
     gemini_model = genai.GenerativeModel("gemini-pro")
-    #llm = GeminiLLM(model=gemini_model)
+    
+    llm = GeminiLLM(model=gemini_model)
     
 
     model_kwargs = {'device':'cpu'}
@@ -75,7 +76,7 @@ def setup_models():
 
     )
     
-    return gemini_model, embeddings
+    return llm, embeddings
 
 def load_metadata():
     """Load data from JSON file"""
