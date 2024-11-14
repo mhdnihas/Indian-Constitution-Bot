@@ -11,13 +11,14 @@ import numpy as np
 import faiss
 import json
 from langchain.prompts import PromptTemplate
-from langchain.chains import RetrievalQA
+from langchain.chains import RetrievalQA,LLMChain
 from langchain_community.vectorstores import FAISS
 import os
 from typing import List
 import sys
 from typing import List, Optional, Any, Dict
 from langchain.llms.base import LLM
+
 
 
 
@@ -140,12 +141,33 @@ def setup_qa_chain(vectorstore, llm):
         template=template
     )
 
+    llm_chain = LLMChain(llm=llm, prompt=prompt)
+
+    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+
     return RetrievalQA.from_chain_type(
         llm=llm,
         chain_type="stuff",
-        retriever=vectorstore.as_retriever(),
-        chain_type_kwargs={"prompt": prompt}
+        retriever=retriever,
+        chain_type_kwargs={"prompt": prompt,
+                           "document_variable_name": "documents"  
+                           }
     )
+
+
+
+
+def get_answer(user_query, qa_chain):
+    """Retrieve relevant documents and get an answer from the QA chain"""
+    # Use the RetrievalQA chain to get the answer from the LLM
+    response=qa_chain({"query": user_query,"return_source_documents": True})
+
+    print("Answer:", response['result'])
+    print("\nRetrieved Documents:")
+    for doc in response['documents']:
+        print(doc.page_content)
+    
+    return response
 
 # Initialize everything
 try:
@@ -166,6 +188,13 @@ try:
     
     qa_chain = setup_qa_chain(vectorstore, llm)
     print("QA chain initialized successfully")
+
+
+    query = "What are the fundamental rights guaranteed by the Indian Constitution?"
+
+# Get the answer from the QA chain
+    answer = get_answer(query, qa_chain)
+    print(answer)
     
 except Exception as e:
     print(f"Initialization error: {str(e)}")
