@@ -18,6 +18,9 @@ from typing import List
 import sys
 from typing import List, Optional, Any, Dict
 from langchain.llms.base import LLM
+from langchain_core.prompts import ChatPromptTemplate
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.chains import create_retrieval_chain
 
 
 
@@ -49,30 +52,6 @@ class GeminiLLM(LLM):
     def _identifying_params(self) -> Dict[str, Any]:
         return {"model": "gemini-pro"}
 
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-load_dotenv()
-
-class GeminiLLM(LLM):
-    model: Any
-    
-    @property
-    def _llm_type(self) -> str:
-        return "gemini"
-
-    def _call(self, prompt: str, stop: Optional[List[str]] = None, run_manager: Optional[Any] = None) -> str:
-        response = self.model.generate_content(prompt)
-        return response.text
-
-    @property
-    def _identifying_params(self) -> Dict[str, Any]:
-        return {"model": "gemini-pro"}
-
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-load_dotenv()
 
 def setup_models():
     """Initialize the language and embedding models"""
@@ -81,14 +60,22 @@ def setup_models():
         raise ValueError("GEMINI_API_KEY not found in environment variables")
     
     genai.configure(api_key=GEMINI_API_KEY)
+
     gemini_model = genai.GenerativeModel("gemini-pro")
-    llm = GeminiLLM(model=gemini_model)
+    #llm = GeminiLLM(model=gemini_model)
     
+
+    model_kwargs = {'device':'cpu'}
+    encode_kwargs = {'normalize_embeddings': False}
+
     embeddings = HuggingFaceEmbeddings(
-        model_name='sentence-transformers/all-MiniLM-L6-v2'
+        model_name='sentence-transformers/all-MiniLM-L6-v2',
+         model_kwargs=model_kwargs, 
+        encode_kwargs=encode_kwargs 
+
     )
     
-    return llm, embeddings
+    return gemini_model, embeddings
 
 def load_metadata():
     """Load data from JSON file"""
@@ -105,7 +92,7 @@ def create_documents(texts: List[str]) -> List[Document]:
                 Document(
                     page_content=text,  # Use the correct attribute name for the content
                     metadata={"source": f"document_{i}"},
-                    doc_id=i                )
+                    doc_id=i)
             )
         except Exception as e:
             raise ValueError(f"Error creating document {i}: {str(e)}")
@@ -115,59 +102,58 @@ def create_documents(texts: List[str]) -> List[Document]:
 
 def setup_vectorstore(documents: List[Document], embeddings) -> FAISS:
     """Create and save FAISS vectorstore"""
-    try:
-        vectorstore = FAISS.from_documents(documents, embeddings)
-        vectorstore.save_local("faiss_index")
-        return vectorstore
-    except Exception as e:
-        raise ValueError(f"Error creating vectorstore: {str(e)}")
+    vectorstore = FAISS.from_documents(documents, embeddings)
+    vectorstore.save_local("faiss_index")
 
-def setup_qa_chain(vectorstore, llm):
+
+    return vectorstore
+    
+
+
+def retrieval_chain_llm_response(vectorstore, llm,embeddings):
     """Set up the question-answering chain"""
+
     template = """
+    Answer the following question based only on the provided context. 
+    Think step by step before providing a detailed answer. 
     You are a helpful assistant trained to answer questions about the Indian Constitution. 
     Below are some relevant sections from the Constitution:
 
-    {documents}
+    <context>
+    {context}
+    </context>
 
     Please answer the following question based on the above context:
-    {question}
+    {input}
 
     If the answer cannot be directly found in the provided context, please say so.
     """
 
-    prompt = PromptTemplate(
-        input_variables=["documents", "question"],
-        template=template
-    )
-
-    llm_chain = LLMChain(llm=llm, prompt=prompt)
-
-    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})
-
-    return RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=retriever,
-        chain_type_kwargs={"prompt": prompt,
-                           "document_variable_name": "documents"  
-                           }
-    )
-
-
-
-
-def get_answer(user_query, qa_chain):
-    """Retrieve relevant documents and get an answer from the QA chain"""
-    # Use the RetrievalQA chain to get the answer from the LLM
-    response=qa_chain({"query": user_query,"return_source_documents": True})
-
-    print("Answer:", response['result'])
-    print("\nRetrieved Documents:")
-    for doc in response['documents']:
-        print(doc.page_content)
     
-    return response
+    prompt = ChatPromptTemplate.from_template(template)
+
+   
+
+    document_chain=create_stuff_documents_chain(llm,prompt)
+
+
+    retriever=vectorstore.as_retriever(search_kwargs={"k": 4})
+
+    retrieval_chain=create_retrieval_chain(retriever,document_chain)
+
+    user_query = "What are the fundamental rights guaranteed by the Indian Constitution?"
+
+    response = retrieval_chain.invoke({"input": user_query})
+
+
+    print(response['answer']) 
+
+
+    
+
+
+    
+
 
 # Initialize everything
 try:
@@ -176,25 +162,30 @@ try:
     print("Models initialized successfully")
     
     data = load_metadata()
-    print(f"Loaded {len(data)} documents from metadata")
-    
+
     documents = create_documents(data)
+
     print(f"Created {len(documents)} Document objects")
 
 
     
     vectorstore = setup_vectorstore(documents, embeddings)
     print("Vectorstore created successfully")
+
+
+    retrieval_chain_llm_response(vectorstore, llm,embeddings)
+
+
+
+
     
-    qa_chain = setup_qa_chain(vectorstore, llm)
+
+    
+
+
     print("QA chain initialized successfully")
 
 
-    query = "What are the fundamental rights guaranteed by the Indian Constitution?"
-
-# Get the answer from the QA chain
-    answer = get_answer(query, qa_chain)
-    print(answer)
     
 except Exception as e:
     print(f"Initialization error: {str(e)}")
