@@ -1,21 +1,15 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import google.generativeai as genai
 from langchain.schema import Document
-from huggingface_hub import hf_hub_download
 from langchain_huggingface import HuggingFaceEmbeddings
-import numpy as np
-import faiss
 import json
-from langchain.prompts import PromptTemplate
-from langchain.chains import RetrievalQA,LLMChain
 from langchain_community.vectorstores import FAISS
 import os
 from typing import List
-import sys
 from typing import List, Optional, Any, Dict
 from langchain.llms.base import LLM
 from langchain_core.prompts import ChatPromptTemplate
@@ -24,10 +18,10 @@ from langchain.chains import create_retrieval_chain
 
 
 
-
-
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
 
 load_dotenv()
 
@@ -36,6 +30,8 @@ class Document:
         self.page_content = page_content
         self.metadata = metadata
         self.id = doc_id 
+
+    
 
 class GeminiLLM(LLM):
     model: Any
@@ -52,9 +48,11 @@ class GeminiLLM(LLM):
     def _identifying_params(self) -> Dict[str, Any]:
         return {"model": "gemini-pro"}
 
+llm, embeddings, vectorstore = None, None, None
 
 def setup_models():
     """Initialize the language and embedding models"""
+
     GEMINI_API_KEY = os.getenv('GOOGLE_API_KEY')
     if not GEMINI_API_KEY:
         raise ValueError("GEMINI_API_KEY not found in environment variables")
@@ -109,9 +107,18 @@ def setup_vectorstore(documents: List[Document], embeddings) -> FAISS:
 
     return vectorstore
     
+@app.on_event("startup")
+async def startup_event():
+    global llm, embeddings, vectorstore
+    llm, embeddings = setup_models()
+    data = load_metadata()
+    documents = create_documents(data)
+    vectorstore = setup_vectorstore(documents, embeddings)
 
 
-def retrieval_chain_llm_response(vectorstore, llm,embeddings):
+
+
+def retrieval_chain_llm_response(vectorstore, llm,embeddings,input):
     """Set up the question-answering chain"""
 
     template = """
@@ -142,56 +149,28 @@ def retrieval_chain_llm_response(vectorstore, llm,embeddings):
 
     retrieval_chain=create_retrieval_chain(retriever,document_chain)
 
-    user_query = "What are the fundamental rights guaranteed by the Indian Constitution?"
-
-    response = retrieval_chain.invoke({"input": user_query})
+    response = retrieval_chain.invoke({"input": input})
 
 
     print(response['answer']) 
 
+    return response['answer']
+
+
+def gemini_response(user_message):
+    pass
+
+
+llm, embeddings = setup_models()
+data = load_metadata()
+documents = create_documents(data)
+vectorstore = setup_vectorstore(documents, embeddings)
 
     
 
 
-    
-
-
-# Initialize everything
-try:
-    print("Starting initialization...")
-    llm, embeddings = setup_models()
-    print("Models initialized successfully")
-    
-    data = load_metadata()
-
-    documents = create_documents(data)
-
-    print(f"Created {len(documents)} Document objects")
-
 
     
-    vectorstore = setup_vectorstore(documents, embeddings)
-    print("Vectorstore created successfully")
-
-
-    retrieval_chain_llm_response(vectorstore, llm,embeddings)
-
-
-
-
-    
-
-    
-
-
-    print("QA chain initialized successfully")
-
-
-    
-except Exception as e:
-    print(f"Initialization error: {str(e)}")
-    raise
-
 
 
 
@@ -209,12 +188,8 @@ async def get_index():
 async def chatbot(request: ChatRequest):
     user_message = request.message
 
-    if GEMINI_API_KEY is None:
-
-        raise HTTPException(status_code=500, detail="Gemini API key not found in environment variables")
+    response=retrieval_chain_llm_response(vectorstore, llm,embeddings,user_message)
     
-    
-    response = llm.generate_content(user_message)
 
     print("hai")
-    return JSONResponse(content={"reply": response.text})
+    return JSONResponse(content={"reply": response})
