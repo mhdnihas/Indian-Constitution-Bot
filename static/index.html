@@ -14,15 +14,44 @@
             margin: 0;
             background-color: #f0f0f0;
         }
-        .chat-container {
-            width: 800px;
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
             height: 700px;
             border: 1px solid #ccc;
             border-radius: 8px;
             overflow: hidden;
+            background-color: white;
+        }
+        .sidebar {
+            min-width: 120px;
+            max-width: 220px;
+            background-color: #f7f7f7;
+            padding: 15px;
+            border-right: 1px solid #ccc;
+            overflow-y: auto;
+        }
+        .sidebar h2 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: rgb(50, 122, 230);
+        }
+        .question {
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        .question:hover {
+            background-color: #c2dfee;
+        }
+        .chat-container {
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            background-color: white;
         }
         .chat-header {
             background-color: rgb(50, 122, 230);
@@ -72,58 +101,64 @@
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">Chatbot</div>
-        <div class="chat-messages" id="chatMessages">
-            <div class="message bot-message">Hello! How can I help you today?</div>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Sample Questions</h2>
+            <div class="question" onclick="setQuestion('What does Article 31A of the Indian Constitution cover?')">1. What does Article 31A of the Indian Constitution cover?</div>
+            <div class="question" onclick="setQuestion('What are the rights provided to educational institutions managed by minorities regarding state aid?')">2. What are the rights provided to educational institutions managed by minorities regarding state aid?</div>
+            <div class="question" onclick="setQuestion('What is the time period within which the rules made by the Chairman or the Speaker of a House need to be presented before the House?')">3. What is the time period within which the rules made by the Chairman or the Speaker of a House need to be presented before the House?</div>
+            <div class="question" onclick="setQuestion('What is the monthly salary designated for the Comptroller and Auditor-General of India as per the initial provisions of the Constitution?')">4. What is the monthly salary designated for the Comptroller and Auditor-General of India as per the initial provisions of the Constitution?</div>
+            <div class="question" onclick="setQuestion('Who assumed the position of Comptroller and Auditor-General of India upon the commencement of the Constitution?')">5. Who assumed the position of Comptroller and Auditor-General of India upon the commencement of the Constitution?</div>
         </div>
-        <div class="chat-input">
-            <input type="text" id="userInput" placeholder="Ask Questions...">
-            <button onclick="sendMessage()">Send</button>
+        <div class="chat-container">
+            <div class="chat-header">Indian Constitution Bot </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">Hello! How can I help you today?</div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="userInput" placeholder="Ask Questions...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
         </div>
     </div>
 
     <script>
-        async function sendMessage() {
-    const userInput = document.getElementById('userInput');
-    const chatMessages = document.getElementById('chatMessages');
-
-    if (userInput.value.trim() !== '') {
-        // Add user message
-        const userMessage = document.createElement('div');
-        userMessage.className = 'message user-message';
-        userMessage.textContent = userInput.value;
-        chatMessages.appendChild(userMessage);
-
-        // Send the message to FastAPI server
-        try {
-            const response = await fetch('/chatbot', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ message: userInput.value }),
-            });
-
-            const data = await response.json();
-
-            // Add bot response
-            const botMessage = document.createElement('div');
-            botMessage.className = 'message bot-message';
-            botMessage.textContent = data.reply;
-            chatMessages.appendChild(botMessage);
-
-            // Scroll to the bottom of the chat
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        } catch (error) {
-            console.error("Error sending message:", error);
+        function setQuestion(question) {
+            document.getElementById('userInput').value = question;
         }
 
-        // Clear input field
-        userInput.value = '';
-    }
-}
-    
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const chatMessages = document.getElementById('chatMessages');
+
+            if (userInput.value.trim() !== '') {
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user-message';
+                userMessage.textContent = userInput.value;
+                chatMessages.appendChild(userMessage);
+
+                try {
+                    const response = await fetch('/chatbot', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: userInput.value }),
+                    });
+
+                    const data = await response.json();
+
+                    const botMessage = document.createElement('div');
+                    botMessage.className = 'message bot-message';
+                    botMessage.textContent = data.reply;
+                    chatMessages.appendChild(botMessage);
+
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } catch (error) {
+                    console.error("Error sending message:", error);
+                }
+
+                userInput.value = '';
+            }
+        }
     </script>
 </body>
 </html>
