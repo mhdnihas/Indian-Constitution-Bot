@@ -105,12 +105,6 @@ For developers looking to integrate the chatbot into other systems or applicatio
 - Send the query in the request body.
 - The chatbot will return an appropriate response based on the Indian Constitution.
 
-#### Example request:
-
-```bash
-curl -X POST https://nihas2218-Indian-Constitution-Bot.hf.space/chatbot \
-     -H "Content-Type: application/json" \
-     -d '{"query": "What is Article 370 of the Indian Constitution?"}'
 
 
 ## How it Works:
@@ -230,11 +224,6 @@ The **Indian Constitution Chatbot** exposes a simple API that allows users to in
 
 The API expects a **POST** request with a JSON body containing the user's query.
 
-#### Request Body
-```json
-{
-  "message": "What is Article 370 of the Indian Constitution?"
-}
 
 
 ## Contact Information
@@ -310,49 +299,6 @@ While the **Indian Constitution Chatbot** is functional, there are several areas
 These improvements will help enhance the functionality, accessibility, and user experience of the chatbot, making it a more robust tool for learning and understanding the Indian Constitution.
 
 
-## References
-
-The following resources were utilized or inspired the development of the **Indian Constitution Chatbot**:
-
-### 1. **Hugging Face Transformers and Embeddings**
-   - [Hugging Face Documentation](https://huggingface.co/docs)
-   - [Hugging Face Embeddings](https://huggingface.co/docs/transformers/main_classes/embeddings)
-
-### 2. **Retrieval-Augmented Generation (RAG)**
-   - [RAG: Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401)
-
-### 3. **FAISS (Facebook AI Similarity Search)**
-   - [FAISS Documentation](https://github.com/facebookresearch/faiss)
-   - [FAISS: A Library for Efficient Similarity Search](https://arxiv.org/abs/1702.08734)
-
-### 4. **LangChain**
-   - [LangChain Documentation](https://langchain.readthedocs.io/en/latest/)
-   - [LangChain: A Framework for Building NLP Applications](https://www.langchain.com/)
-
-### 5. **FastAPI**
-   - [FastAPI Documentation](https://fastapi.tiangolo.com/)
-   - [FastAPI: Modern Web Framework for Fast APIs](https://fastapi.tiangolo.com/)
-
-### 6. **Sentence Transformers**
-   - [Sentence-Transformers Documentation](https://www.sbert.net/)
-   - [Sentence Transformers: Using BERT and Friends for Similarity](https://arxiv.org/abs/1908.10084)
-
-### 7. **Docker**
-   - [Docker Documentation](https://docs.docker.com/)
-   - [Docker: The Container Platform](https://www.docker.com/what-docker-is)
-
-### 8. **Python Environment Management**
-   - [Python Environment Setup](https://realpython.com/python-environments/)
-   - [Python Virtual Environments: A Primer](https://realpython.com/python-virtual-environments-a-primer/)
-
-### 9. **Other Resources**
-   - [Indian Constitution - Full Text](https://legislative.gov.in/constitution-of-india)
-   - [Constitution of India - Wikipedia](https://en.wikipedia.org/wiki/Constitution_of_India)
-   
-### 10. **OpenAI**
-   - [OpenAI API Documentation](https://beta.openai.com/docs/)
-
-These resources and frameworks provided the foundation for the chatbot’s design, functionality, and deployment.
 
 
 
