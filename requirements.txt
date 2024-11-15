@@ -11,3 +11,4 @@ pypdf
 google-cloud-aiplatform>=1.38
 fastapi
 google-generativeai
+langchain_huggingface
