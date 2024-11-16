@@ -16,11 +16,15 @@
 - [Future Improvements](#future-improvements)
 - [References](#references)
 
+
 ## Project Overview
 
-The **Indian Constitution Chatbot** is an AI-powered chatbot that answers questions related to the Indian Constitution in 2024. It is built using the **Retrieval-Augmented Generation (RAG)** method, utilizing cutting-edge embeddings and models from **Hugging Face** to retrieve relevant data and generate informative responses.
+The Indian Constitution Chatbot is an AI-powered assistant designed to provide answers to questions about the Indian Constitution in a clear and accessible way. Whether you're interested in specific articles, clauses, or amendments, this chatbot helps users easily understand and explore the Constitution's complexities.
 
-This chatbot aims to provide users with an easy way to understand the Indian Constitution's articles, clauses, and more.
+The chatbot is built using cutting-edge AI technology, specifically the Retrieval-Augmented Generation (RAG) method. It leverages advanced models and embeddings from Hugging Face to retrieve the most relevant data and generate accurate, informative responses. This combination ensures that users receive not only fast answers but also reliable, context-rich information.
+
+This tool is perfect for students, legal enthusiasts, or anyone looking to learn more about India's foundational law, making the Constitution more approachable and understandable for all.
+
 
 ## Installation
 
@@ -108,6 +112,8 @@ For developers looking to integrate the chatbot into other systems or applicatio
 
 
 ## How it Works:
+
+![Alt Text](RAG_Workflow.png)
 
 The **Indian Constitution Chatbot** uses the **Retrieval-Augmented Generation (RAG)** technique to answer questions about the Indian Constitution. It combines powerful natural language processing (NLP) models and a vector database for efficient retrieval of relevant information. Here's a breakdown of how the system works:
 
